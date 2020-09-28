@@ -61,7 +61,6 @@ class extended_restore_controller
     public function __construct(remote_backup_provider $rbp, int $remote)
     {
         $this->rbp = $rbp;
-        $params['uniqueid'] = remote_backup_provider::get_uniqueid()->value;
         $params['id'] = $remote;
         // Generate the backup file on remote Moodle and store the link to the file in object.
         $this->remotecourse = $rbp->get_remote_data('local_remote_backup_provider_get_course_backup_by_id', $params);
