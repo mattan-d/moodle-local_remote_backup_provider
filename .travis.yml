@@ -1,0 +1,67 @@
+language: php
+
+addons:
+  postgresql: "9.6"
+  firefox: "68.8.0"
+
+cache:
+  directories:
+    - $HOME/.composer/cache
+    - $HOME/.npm
+
+services:
+  - mysql
+
+env:
+  matrix:
+    - DB=pgsql MOODLE_BRANCH=MOODLE_35_STABLE
+    - DB=pgsql MOODLE_BRANCH=MOODLE_37_STABLE
+    - DB=pgsql MOODLE_BRANCH=MOODLE_38_STABLE
+    - DB=pgsql MOODLE_BRANCH=master
+    - DB=mysqli MOODLE_BRANCH=MOODLE_35_STABLE
+    - DB=mysqli MOODLE_BRANCH=MOODLE_37_STABLE
+    - DB=mysqli MOODLE_BRANCH=MOODLE_38_STABLE
+    - DB=mysqli MOODLE_BRANCH=master
+
+matrix:
+  exclude:
+    - php: 7.1
+      env: DB=pgsql MOODLE_BRANCH=master
+    - php: 7.1
+      env: DB=mysqli MOODLE_BRANCH=master
+    - php: 7.2
+      env: DB=pgsql MOODLE_BRANCH=master
+    - php: 7.2
+      env: DB=mysqli MOODLE_BRANCH=master
+    - php: 7.3
+      env: DB=pgsql MOODLE_BRANCH=MOODLE_38_STABLE
+    - php: 7.3
+      env: DB=mysqli MOODLE_BRANCH=MOODLE_38_STABLE
+    - php: 7.3
+      env: DB=pgsql MOODLE_BRANCH=MOODLE_35_STABLE
+    - php: 7.3
+      env: DB=mysqli MOODLE_BRANCH=MOODLE_35_STABLE
+
+before_install:
+  - phpenv config-rm xdebug.ini
+  - nvm install 14.0
+  - nvm use 14.0
+  - cd ../..
+  - composer selfupdate
+  - composer create-project -n --no-dev --prefer-dist moodlerooms/moodle-plugin-ci ci ^2
+  - export PATH="$(cd ci/bin; pwd):$(cd ci/vendor/bin; pwd):$PATH"
+
+install:
+  - moodle-plugin-ci install
+
+script:
+  - moodle-plugin-ci phplint
+  - moodle-plugin-ci phpcpd
+  - moodle-plugin-ci phpmd
+  - moodle-plugin-ci codechecker
+  - moodle-plugin-ci validate
+  - moodle-plugin-ci savepoints
+  - moodle-plugin-ci mustache || true # Report errors but don't fail due to random errors in the validation
+  - moodle-plugin-ci grunt || true # Minifying changed accross Moodle versions so validation fails
+  - moodle-plugin-ci phpunit
+  - moodle-plugin-ci behat
