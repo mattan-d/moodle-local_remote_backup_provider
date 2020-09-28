@@ -67,6 +67,13 @@ class extended_restore_controller
         $this->remotecourse = $rbp->get_remote_data('local_remote_backup_provider_get_course_backup_by_id', $params);
         $this->fs = get_file_storage();
         $timestamp = time();
+
+        $this->options = array(
+            'timeout' => 30000,
+            'connecttimeout' => 300,
+            'skipcertverify' => true
+        );
+
         $this->filerecord = array(
             'contextid' => $this->rbp->context->id,
             'component' => 'local_remote_backup_provider',
@@ -149,15 +156,8 @@ class extended_restore_controller
     public function import_backup_file()
     {
 
-        $options = array(
-            'timeout' => 30000,
-            'connecttimeout' => 300,
-            'skipcertverify' => true
-        );
-
-
         $storedfile = $this->fs->create_file_from_url($this->filerecord,
-            $this->remotecourse->url . '?token=' . $this->rbp->token, $options, true);
+            $this->remotecourse->url . '?token=' . $this->rbp->token, $this->options, true);
         $restoreurl = new moodle_url('/backup/restore.php',
             array(
                 'contextid' => $this->rbp->context->id,
@@ -187,14 +187,8 @@ class extended_restore_controller
             throw new restore_controller_exception('cannot_create_backup_temp_dir');
         }
 
-        $options = array(
-            'timeout' => 30000,
-            'connecttimeout' => 300,
-            'skipcertverify' => true
-        );
-
         $storedfile = $this->fs->create_file_from_url($this->filerecord, $this->remotecourse->url . '?token=' . $this->rbp->token,
-            $options, true);
+            $this->options, true);
 
         $restoreurl = new moodle_url('/backup/restore.php',
             array(
